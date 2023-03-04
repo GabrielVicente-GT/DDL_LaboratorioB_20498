@@ -30,7 +30,7 @@ _No utilizar espacios en blanco para indicar una transiciones_
 
 ### Ejemplo de simulacion
 
-_Grafica generada_
+_Graficas generadas_
 
 
 
