@@ -7,10 +7,10 @@ CC 3071 Diseño de Lenguajes de programación <br>
 
 # DDL_LaboratorioB_20498
 
-AFN a partir de postfix
-AFD a partir de AFN
-AFD a partir de postfix modificada
-Minimizacion de AFD
+AFN a partir de postfix<br>
+AFD a partir de AFN<br>
+AFD a partir de postfix modificada<br>
+Minimizacion de AFD<br>
 Simulación de AFN y AFD
 
 _Propiedades principales y graficas_
