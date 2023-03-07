@@ -39,17 +39,17 @@ print('\t*\tIf you wanna use our program again you need to close the generated p
 print('\t*\tThe AFN will be generated only if regex is valid\n')
 
 # Regex request
-regex = "(a|b)(a|b)*ab(c?)"
+regex = "asdfassdfaadadsdaadaadadfadfadafds(a|b)(a|b)*ab(c?)"
 # regex = input('Enter a regular expression from which to generate your AFN: ')
 
 #Postfix to AFN
 print(f'\n{InfixToPostfix(regex)}\n')
 
 # AFN
-AFN(InfixToPostfix(regex).postfix)
+NFA  = AFN(InfixToPostfix(regex).postfix)
 
 # Direct AFD
-Direct_AFD(InfixToPostfix(regex).postfix)
+DFA    = Direct_AFD(InfixToPostfix(regex).postfix)
 
 # AFD from AFN
-
+DFA_from_NFA = AFD_from_AFN(NFA)

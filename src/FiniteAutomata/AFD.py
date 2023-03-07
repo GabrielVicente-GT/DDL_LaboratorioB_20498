@@ -4,6 +4,25 @@ import graphviz
 
 # tabulate allow us to print the properties in a fancy way (it is not elementary)
 from tabulate import tabulate
+class AFD_from_AFN(object):
+    def __init__(self, AFN):
+        self.AFN = AFN
+
+        # AFN and graph properties
+        if self.AFN.postfix == 'ERROR':
+            print(f'{"─"*117}')
+            print(f'{"─"*45} AFD from AFN not available {"─"*44}')
+            print(f'{"─"*117}\n')
+        else:
+            self.transform_afn_to_afd()
+            self.AFD_from_AFN_graph()
+
+
+    def transform_afn_to_afd(self):
+        pass
+
+    def AFD_from_AFN_graph(self):
+        pass
 
 class Direct_AFD(object):
     def __init__(self,postfix):
@@ -34,7 +53,7 @@ class Direct_AFD(object):
         # AFN and graph properties
         if self.postfix == 'ERROR':
             print(f'{"─"*117}')
-            print(f'{"─"*51}AFD not avaiable{"─"*50}')
+            print(f'{"─"*50}AFD not available{"─"*50}')
             print(f'{"─"*117}\n')
         else:
             self.postfix = self.postfix+'#.'
@@ -327,8 +346,8 @@ class Direct_AFD(object):
 
         f.node("", height = "0",width = "0", shape = "box")
         f.edge("",self.q_o, arrowhead='vee', )
-        # f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png", view="True")
-        f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png")
+        f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png", view="True")
+        # f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png")
 
 class AFD_row(object):
     def __init__(self, state, f_table, sigma):

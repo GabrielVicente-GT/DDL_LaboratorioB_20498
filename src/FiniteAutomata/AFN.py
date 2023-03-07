@@ -33,7 +33,7 @@ class AFN(object):
         # AFN and graph properties
         if self.postfix == 'ERROR':
             print(f'{"─"*117}')
-            print(f'{"─"*51}AFN not avaiable{"─"*50}')
+            print(f'{"─"*50}AFN not available{"─"*50}')
             print(f'{"─"*117}\n')
         else:
             self.transform_postfix_to_afn()
@@ -301,8 +301,8 @@ class AFN(object):
         # start identification adn name
         f.node("", height = "0",width = "0", shape = "box")
         f.edge("",self.q_o, arrowhead='vee', )
-        # f.render("./src/GraphedFiniteAutomata/AFN", format="png", view="True")
-        f.render("./src/GraphedFiniteAutomata/AFN", format="png")
+        f.render("./src/GraphedFiniteAutomata/AFN", format="png", view="True")
+        # f.render("./src/GraphedFiniteAutomata/AFN", format="png")
 
 # AFN_node is a class that allow us to have a
 # summary of the properties of each characther
