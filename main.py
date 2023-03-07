@@ -13,17 +13,20 @@ Al igual que la jerarquia de los parentesis
 """
 
 #Imports needed for lab A
-from InfixToPostfix import *
-from AFN import *
+from Tools.InfixToPostfix import *
+from FiniteAutomata.AFN import *
+from FiniteAutomata.AFD import *
 
 #REGEX EXAMPLES
 """
 "ab*ab*"
 "0?(1?)?0*"
 "(a*|b*)c"
-"(b|b)*abb(a|b)*"
+"(a|b)*abb"
 "(a|E)b(a+)c?"
+"(b|b)*abb(a|b)*"
 "(a|b)*a(a|b)(a|b)"
+"(a|b)(a|b)*ab(c?)"
 """
 
 # Description
@@ -34,14 +37,15 @@ print('\t*\tSpace is not a valid transition')
 print('\t*\tEpsilon is represented by our \"E\" character ')
 print('\t*\tIf you wanna use our program again you need to close the generated pdf')
 print('\t*\tThe AFN will be generated only if regex is valid\n')
-# Regex request
 
-# regex = "(a|b)*a(a|b)(a|b)**"
-regex = input('Enter a regular expression from which to generate your AFN: ')
+# Regex request
+regex = "(a|b)(a|b)*ab(c?)"
+# regex = input('Enter a regular expression from which to generate your AFN: ')
 
 #Postfix to AFN
 print(f'\n{InfixToPostfix(regex)}\n')
-AFN(InfixToPostfix(regex).postfix)
+# AFN(InfixToPostfix(regex).postfix)
+Direct_AFD(InfixToPostfix(regex).postfix)
 
 
 
