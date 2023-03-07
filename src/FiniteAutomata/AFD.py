@@ -327,7 +327,8 @@ class Direct_AFD(object):
 
         f.node("", height = "0",width = "0", shape = "box")
         f.edge("",self.q_o, arrowhead='vee', )
-        f.render("./GraphedFiniteAutomata/Direct_AFD", format="png", view="True")
+        # f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png", view="True")
+        f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png")
 
 class AFD_row(object):
     def __init__(self, state, f_table, sigma):

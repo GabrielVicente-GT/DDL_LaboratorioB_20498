@@ -44,41 +44,12 @@ regex = "(a|b)(a|b)*ab(c?)"
 
 #Postfix to AFN
 print(f'\n{InfixToPostfix(regex)}\n')
-# AFN(InfixToPostfix(regex).postfix)
+
+# AFN
+AFN(InfixToPostfix(regex).postfix)
+
+# Direct AFD
 Direct_AFD(InfixToPostfix(regex).postfix)
 
+# AFD from AFN
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#AFN
-
-#Validación de AFN
-
-#AFD a partir de AFN
-
-#Validacion de AFD a partir de AFN
-
-#AFD directo
-
-#Validacion de AFD directo
