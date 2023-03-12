@@ -4,25 +4,127 @@ import graphviz
 
 # tabulate allow us to print the properties in a fancy way (it is not elementary)
 from tabulate import tabulate
+
+# utils is usefull to rename the sets and prints
+from Tools.utils import *
+
 class AFD_from_AFN(object):
     def __init__(self, AFN):
-        self.AFN = AFN
+        self.AFN        = AFN
+        self.unmarked   = []
+        self.asignacion = {}
+        '''AFD consist of:'''
+        #The values of these variables will change
 
-        # AFN and graph properties
+        # Initial state
+        self.q_o    = None
+        # Transition function
+        self.delta  = {}
+        # Input simbols
+        self.sigma  = []
+        # Finite set of states
+        self.que    = []
+        # Acceptence states
+        self.F      = []
+
+        # AFD and graph properties
+
         if self.AFN.postfix == 'ERROR':
-            print(f'{"─"*117}')
-            print(f'{"─"*45} AFD from AFN not available {"─"*44}')
-            print(f'{"─"*117}\n')
+            banner(' AFD from AFN not available ', False)
         else:
             self.transform_afn_to_afd()
-            self.AFD_from_AFN_graph()
+            finite_automaton_graph(self.F, self.q_o, self.delta,'AFD_from_AFN')
 
+    def E_closure(self, states, diccionario):
+
+        reached = set()
+        stack = []
+
+        for state in states:
+            stack.append(state)
+            reached.add(state)
+
+        while len(stack) != 0:
+            actual_state = stack.pop()
+            for state, transitions in diccionario.items():
+                if actual_state == state:
+                    for possible_new in transitions['E']:
+                        if possible_new not in reached:
+                            reached.add(possible_new)
+                            stack.append(possible_new)
+
+        return reached
+
+    def move(self, T, symbol, diccionario):
+        reached_u = set()
+        stack = []
+
+        for state in T:
+            stack.append(state)
+
+        while len(stack) != 0:
+            actual_state = stack.pop()
+            for state, transitions in diccionario.items():
+                if actual_state == state:
+                    for possible_new in transitions[symbol]:
+                        if possible_new not in reached_u:
+                            reached_u.add(possible_new)
+
+        return reached_u
 
     def transform_afn_to_afd(self):
-        pass
 
-    def AFD_from_AFN_graph(self):
-        pass
+        # Initial state from AFN q_o
+        self.q_o = self.E_closure([self.AFN.q_o], self.AFN.delta)
+
+        # Existing states
+        self.que.append(self.q_o)
+
+        # Both alphabets are equal
+        self.sigma = self.AFN.sigma
+
+        # Filling the transition function
+        self.delta = {str(state): {} for state in self.que}
+        self.delta = {x: {letra: [] for letra in self.sigma} for x in self.delta}
+
+        # Unmarked states as the Dragon books says
+        self.unmarked.append(self.q_o)
+
+        # Subset construcion logic
+        while len(self.unmarked) != 0:
+            actual_state = self.unmarked.pop()
+            for Symbol in self.sigma:
+                U = self.E_closure(self.move(actual_state, Symbol, self.AFN.delta), self.AFN.delta)
+                if U not in self.que and str(U) != 'set()':
+                    self.que.append(U)
+                    self.delta[str(U)] = {}
+                    for letra in self.sigma:
+                        self.delta[str(U)][letra] = []
+                    self.unmarked.append(U)
+                if str(U) != 'set()':
+                    self.delta[str(actual_state)][Symbol].append(str(U))
+
+        # Final state
+        self.F = [state for state in self.que if any(acceptance_state in state for acceptance_state in self.AFN.F)]
+
+        # Easy read
+        self.asignacion = {str(state): letter_rename(position) for position, state in enumerate(self.que)}
+        self.que        = [self.asignacion[str(state)] for state in self.que]
+        self.F          = [self.asignacion[str(state)] for state in self.F]
+        self.q_o        = self.asignacion[str(self.q_o)]
+        self.delta = {self.asignacion[str(conjunto)]: {k: [self.asignacion[s] if s in self.asignacion else s for s in v] for k, v in valores.items()} for conjunto, valores in self.delta.items()}
+
+        """AFD from AFN FINAL RESULTS"""
+
+        banner(' AFD from AFN final results ')
+
+        """ Fancy prints with tabulate"""
+
+        finite_automaton_results(self.que, self.sigma, self.F, self.q_o, self.delta)
+
+        """ Final prints without tabulate"""
+
+        # finite_automaton_results(self.que, self.sigma, self.F, self.q_o, self.delta,False)
 
 class Direct_AFD(object):
     def __init__(self,postfix):
@@ -50,38 +152,18 @@ class Direct_AFD(object):
         # Acceptence states
         self.F = []
 
-        # AFN and graph properties
+        # AFD and graph properties
         if self.postfix == 'ERROR':
-            print(f'{"─"*117}')
-            print(f'{"─"*50}AFD not available{"─"*50}')
-            print(f'{"─"*117}\n')
+
+            banner(' AFD is not available ', False)
+
         else:
+
             self.postfix = self.postfix+'#.'
             print(f'AFD Postfix -> {self.postfix}\n')
             self.transform_postfix_to_afd()
-            self.AFD_graph()
-    # Function used in transform_postfix_to_afn to find the values ​​associated with a certain operator
-    def child_node(self, father_position, arbol):
+            finite_automaton_graph(self.F, self.q_o, self.delta,'Direct_AFD')
 
-        # Space to save the children position
-        children = []
-
-        # Position where the analysis begin
-        to_analize = father_position - 1
-
-        # While we are not out the array the process continues
-        while (to_analize != -1):
-
-            # If the analyzed property is False it represents a child
-            # we appende this position to our result
-            if arbol[to_analize].analyzed == False and len(children) < 2:
-                children.append(to_analize)
-
-            # We substract a position until the while es False
-            to_analize -= 1
-
-        # We return the children
-        return children
 
     def transform_postfix_to_afd(self):
 
@@ -115,14 +197,14 @@ class Direct_AFD(object):
                 leaf.nullable = False
 
             elif leaf.value == '|':
-                leaf.nullable = self.binary_tree[self.child_node(position, self.binary_tree)[1]].nullable or self.binary_tree[self.child_node(position, self.binary_tree)[0]].nullable
-                self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                leaf.nullable = self.binary_tree[child_node(position, self.binary_tree)[1]].nullable or self.binary_tree[child_node(position, self.binary_tree)[0]].nullable
+                self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
             elif leaf.value == '.':
-                leaf.nullable = self.binary_tree[self.child_node(position, self.binary_tree)[1]].nullable and self.binary_tree[self.child_node(position, self.binary_tree)[0]].nullable
-                self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                leaf.nullable = self.binary_tree[child_node(position, self.binary_tree)[1]].nullable and self.binary_tree[child_node(position, self.binary_tree)[0]].nullable
+                self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
         # Cleaning binary_tree
         for leaf in self.binary_tree:
@@ -131,26 +213,26 @@ class Direct_AFD(object):
         # Firstpos function
         for position, leaf in enumerate(self.binary_tree):
             if leaf.value == '*':
-                leaf.firstpos = self.binary_tree[self.child_node(position, self.binary_tree)[0]].firstpos
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                leaf.firstpos = self.binary_tree[child_node(position, self.binary_tree)[0]].firstpos
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
             elif leaf.value == '+':
                 pass
 
             elif leaf.value == '|':
-                leaf.firstpos = self.binary_tree[self.child_node(position, self.binary_tree)[1]].firstpos | self.binary_tree[self.child_node(position, self.binary_tree)[0]].firstpos
-                self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                leaf.firstpos = self.binary_tree[child_node(position, self.binary_tree)[1]].firstpos | self.binary_tree[child_node(position, self.binary_tree)[0]].firstpos
+                self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
             elif leaf.value == '.':
-                if self.binary_tree[self.child_node(position, self.binary_tree)[1]].nullable == True:
-                    leaf.firstpos = self.binary_tree[self.child_node(position, self.binary_tree)[1]].firstpos  | self.binary_tree[self.child_node(position, self.binary_tree)[0]].firstpos
-                    self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                    self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                if self.binary_tree[child_node(position, self.binary_tree)[1]].nullable == True:
+                    leaf.firstpos = self.binary_tree[child_node(position, self.binary_tree)[1]].firstpos  | self.binary_tree[child_node(position, self.binary_tree)[0]].firstpos
+                    self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                    self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
                 else:
-                    leaf.firstpos = self.binary_tree[self.child_node(position, self.binary_tree)[1]].firstpos
-                    self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                    self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                    leaf.firstpos = self.binary_tree[child_node(position, self.binary_tree)[1]].firstpos
+                    self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                    self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
         # Cleaning binary_tree
         for leaf in self.binary_tree:
@@ -161,26 +243,26 @@ class Direct_AFD(object):
 
         for position, leaf in enumerate(self.binary_tree):
             if leaf.value == '*':
-                leaf.lastpos = self.binary_tree[self.child_node(position, self.binary_tree)[0]].lastpos
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                leaf.lastpos = self.binary_tree[child_node(position, self.binary_tree)[0]].lastpos
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
             elif leaf.value == '+':
                 pass
 
             elif leaf.value == '|':
-                leaf.lastpos = self.binary_tree[self.child_node(position, self.binary_tree)[1]].lastpos | self.binary_tree[self.child_node(position, self.binary_tree)[0]].lastpos
-                self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                leaf.lastpos = self.binary_tree[child_node(position, self.binary_tree)[1]].lastpos | self.binary_tree[child_node(position, self.binary_tree)[0]].lastpos
+                self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
             elif leaf.value == '.':
-                if self.binary_tree[self.child_node(position, self.binary_tree)[0]].nullable == True:
-                    leaf.lastpos = self.binary_tree[self.child_node(position, self.binary_tree)[1]].lastpos  | self.binary_tree[self.child_node(position, self.binary_tree)[0]].lastpos
-                    self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                    self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                if self.binary_tree[child_node(position, self.binary_tree)[0]].nullable == True:
+                    leaf.lastpos = self.binary_tree[child_node(position, self.binary_tree)[1]].lastpos  | self.binary_tree[child_node(position, self.binary_tree)[0]].lastpos
+                    self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                    self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
                 else:
-                    leaf.lastpos = self.binary_tree[self.child_node(position, self.binary_tree)[0]].lastpos
-                    self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                    self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                    leaf.lastpos = self.binary_tree[child_node(position, self.binary_tree)[0]].lastpos
+                    self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                    self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
         # Cleaning binary_tree
         for leaf in self.binary_tree:
@@ -194,10 +276,10 @@ class Direct_AFD(object):
         # Followpos function
         for position, leaf in enumerate(self.binary_tree):
             if leaf.value == '*':
-                A = self.binary_tree[self.child_node(position, self.binary_tree)[0]].lastpos
-                B = self.binary_tree[self.child_node(position, self.binary_tree)[0]].firstpos
+                A = self.binary_tree[child_node(position, self.binary_tree)[0]].lastpos
+                B = self.binary_tree[child_node(position, self.binary_tree)[0]].firstpos
 
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
                 for f_row in self.followpost_table:
                     if f_row.id in A:
@@ -207,15 +289,15 @@ class Direct_AFD(object):
                 pass
 
             elif leaf.value == '|':
-                self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
             elif leaf.value == '.':
-                A = self.binary_tree[self.child_node(position, self.binary_tree)[1]].lastpos
-                B = self.binary_tree[self.child_node(position, self.binary_tree)[0]].firstpos
+                A = self.binary_tree[child_node(position, self.binary_tree)[1]].lastpos
+                B = self.binary_tree[child_node(position, self.binary_tree)[0]].firstpos
 
-                self.binary_tree[self.child_node(position, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(position, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(position, self.binary_tree)[0]].analyzed = True
 
                 for f_row in self.followpost_table:
                     if f_row.id in A:
@@ -231,6 +313,9 @@ class Direct_AFD(object):
         for char in self.postfix:
             if char not in self.numbering_exceptions and char != '#':
                 self.sigma.add(char)
+
+        self.sigma = list(self.sigma)
+
         # Transition function
         # self.delta.append(AFD_row(self.binary_tree[-1].firstpos,self.followpost_table, self.sigma))
 
@@ -266,97 +351,49 @@ class Direct_AFD(object):
                             self.delta[afd_row][letter].append(str(transition.transitions[letter]))
 
         for afd_row in self.delta:
-            for state in afd_row:
+            temp = afd_row.replace("{", "").replace("}", "").replace("'", "").replace(" ", "")
+            set_temp = set(temp.split(","))
+            for state in set_temp:
                 if state == str(self.numeral_id):
                     self.F.append(afd_row)
 
         # Pasar de numeros a letras
-        abecedario = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-        if len(self.que)<27:
-            for position, state in enumerate(self.que):
-                self.asignacion[str(state)] = abecedario[position]
-            self.que    = [self.asignacion[state] for state in self.que]
-            self.F      = [self.asignacion[state] for state in self.F]
-            self.q_o    = self.asignacion[self.q_o]
+        # Name reasignation
 
-            delta_letras = {}
-            for conjunto, valores in self.delta.items():
-                letra = self.asignacion[str(conjunto)]
-                valores_letras = {}
-                for k, v in valores.items():
-                    valores_letras[k] = [self.asignacion[s] if s in self.asignacion else s for s in v]
-                delta_letras[letra] = valores_letras
-            self.delta = delta_letras
+        for position, state in enumerate(self.que):
+            self.asignacion[str(state)] = letter_rename(position)
+
+        self.que    = [self.asignacion[str(state)] for state in self.que]
+        self.F      = [self.asignacion[str(state)] for state in self.F]
+        self.q_o    = self.asignacion[str(self.q_o)]
+
+        delta_letras = {}
+        for conjunto, valores in self.delta.items():
+            letra = self.asignacion[str(conjunto)]
+            valores_letras = {}
+            for k, v in valores.items():
+                valores_letras[k] = [self.asignacion[s] if s in self.asignacion else s for s in v]
+            delta_letras[letra] = valores_letras
+        self.delta = delta_letras
+
         """AFD FINAL RESULTS"""
 
-        print(f'{"─"*117}')
-        print(f'\n{"─"*50}AFD final results{"─"*50}\n')
-        print(f'{"─"*117}\n')
+        banner(' Direct AFD final results ')
+
+        """ Fancy prints with tabulate"""
+
+        finite_automaton_results(self.que, self.sigma, self.F, self.q_o, self.delta)
 
         """ Final prints without tabulate"""
 
-        # print(f'\nEstados ->{self.que}')
-        # print(f'Transiciones ->\n')
-
-        # for x in self.delta:
-        #     print(x, "", self.delta[x])
-
-        # print(f'\nSimbolos -> {self.sigma}')
-        # print(f'Estados de aceptacion -> {self.F}')
-        # print(f'Estado inicial-> {self.q_o}\n')
-
-        """ Fancy prints with tabulate"""
-        AFD_proporties = [
-            ["Estados", self.que],
-            ["Simbolos", self.sigma],
-            ["Estados de aceptacion", self.F],
-            ["Estado inicial", self.q_o],
-        ]
-        print(tabulate(AFD_proporties, tablefmt="fancy_grid", numalign="center", stralign="left"),'\n')
-
-        AFD_delta = []
-        for key, value in self.delta.items():
-            subtable = []
-            for subkey, subvalue in value.items():
-                subtable.append([subkey, subvalue])
-            AFD_delta.append([key, tabulate(subtable, tablefmt="plain", numalign="center", stralign="left")])
-
-        print(tabulate(AFD_delta, headers=['Estado             ', 'Transicion'], tablefmt="fancy_grid", numalign="center", stralign="left"),'\n')
-
-
-    def AFD_graph(self):
-        # Graficas
-        f= graphviz.Digraph(name="AFD_directo")
-        f.attr(rankdir='LR')
-
-
-        for x, y in self.delta.items():
-            if x in self.F:
-                f.node(str(x), shape = "doublecircle", style = 'filled', fillcolor = 'lightblue')
-            elif x == self.q_o:
-                f.node(str(x), shape = "circle", style = 'filled', fillcolor = 'lightgreen')
-            else:
-                f.node(str(x), shape = "circle")
-
-        for x in self.delta:
-            for y in self.delta[x]:
-                    if len(self.delta[x][y]) != 0:
-                        for w in self.delta[x][y]:
-                            f.edge(x,w, label = y, arrowhead='vee')
-
-        f.node("", height = "0",width = "0", shape = "box")
-        f.edge("",self.q_o, arrowhead='vee', )
-        f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png", view="True")
-        # f.render("./src/GraphedFiniteAutomata/Direct_AFD", format="png")
+        # finite_automaton_results(self.que, self.sigma, self.F, self.q_o, self.delta,False)
 
 class AFD_row(object):
     def __init__(self, state, f_table, sigma):
+
         self.f_table    = f_table
         self.alphabet   = sigma
-
         self.different_states  = []
-
-
         self.state      = state
         self.transitions    = {}
         self.states_values = []
@@ -374,10 +411,6 @@ class AFD_row(object):
                 if char == state_value.value:
                     self.transitions[char] = self.transitions[char] | state_value.followpos
 
-        # print('---------------------')
-        # for x in self.states_values:
-        #     print(x)
-
         for tran in self.transitions:
             if self.transitions[tran] != self.state and str(self.transitions[tran] != 'set()'):
                 self.different_states.append(self.transitions[tran])
@@ -388,10 +421,10 @@ class AFD_row(object):
 
 
     def __str__(self):
-        # return f"Estado: {self.state} Estados creados: {self.different_states} Transitions:{self.transitions}"
         return f"Estado: {self.state} Transitions:{self.transitions}"
 
 class AFD_node(object):
+
     def __init__(self, value, id=None):
 
         self.id         = id
@@ -401,8 +434,8 @@ class AFD_node(object):
         self.lastpos    = set([])
         self.analyzed   = False
 
-
     def __str__(self):
+
         cadena="Id:" +str(self.id)+"\t\t"+self.value+"\t\tNullable:" +str(self.nullable)+"\t\tFirstpos:" +str(self.firstpos)+"\t\tLastpos:" +str(self.lastpos)
         return cadena
 

@@ -14,6 +14,7 @@ Al igual que la jerarquia de los parentesis
 
 #Imports needed for lab A
 from Tools.InfixToPostfix import *
+from Tools.utils import *
 from FiniteAutomata.AFN import *
 from FiniteAutomata.AFD import *
 
@@ -27,19 +28,14 @@ from FiniteAutomata.AFD import *
 "(b|b)*abb(a|b)*"
 "(a|b)*a(a|b)(a|b)"
 "(a|b)(a|b)*ab(c?)"
+"sfgsg(a|b)(a|b)*ab(c?)asdfaslakjsdfhalsdkjfhalskjfdd"
 """
 
 # Description
-
-print(f'\n{"─"*117}\n{"─"*50}WELCOME TO LAB A!{"─"*50}\n{"─"*85} Auth. Gabriel Vicente 20498 UVG\n')
-print(' --> Note that')
-print('\t*\tSpace is not a valid transition')
-print('\t*\tEpsilon is represented by our \"E\" character ')
-print('\t*\tIf you wanna use our program again you need to close the generated pdf')
-print('\t*\tThe AFN will be generated only if regex is valid\n')
+description()
 
 # Regex request
-regex = "asdfassdfaadadsdaadaadadfadfadafds(a|b)(a|b)*ab(c?)"
+regex = "(a|b)(a|b)*ab(c?)"
 # regex = input('Enter a regular expression from which to generate your AFN: ')
 
 #Postfix to AFN
@@ -48,8 +44,9 @@ print(f'\n{InfixToPostfix(regex)}\n')
 # AFN
 NFA  = AFN(InfixToPostfix(regex).postfix)
 
+# AFD from AFN
+DFA_from_NFA = AFD_from_AFN(NFA)
+
 # Direct AFD
 DFA    = Direct_AFD(InfixToPostfix(regex).postfix)
 
-# AFD from AFN
-DFA_from_NFA = AFD_from_AFN(NFA)

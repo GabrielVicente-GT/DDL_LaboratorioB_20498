@@ -6,6 +6,9 @@ import graphviz
 # tabulate allow us to print the properties in a fancy way (it is not elementary)
 from tabulate import tabulate
 
+# utils is usefull to rename the sets and prints
+from Tools.utils import *
+
 class AFN(object):
     def __init__(self, postfix):
 
@@ -32,35 +35,10 @@ class AFN(object):
 
         # AFN and graph properties
         if self.postfix == 'ERROR':
-            print(f'{"─"*117}')
-            print(f'{"─"*50}AFN not available{"─"*50}')
-            print(f'{"─"*117}\n')
+            banner(' AFN is not available ', False)
         else:
             self.transform_postfix_to_afn()
-            self.AFN_graph()
-
-    # Function used in transform_postfix_to_afn to find the values ​​associated with a certain operator
-    def child_node(self, father_position, arbol):
-
-        # Space to save the children position
-        children = []
-
-        # Position where the analysis begin
-        to_analize = father_position - 1
-
-        # While we are not out the array the process continues
-        while (to_analize != -1):
-
-            # If the analyzed property is False it represents a child
-            # we appende this position to our result
-            if arbol[to_analize].analyzed == False and len(children) < 2:
-                children.append(to_analize)
-
-            # We substract a position until the while es False
-            to_analize -= 1
-
-        # We return the children
-        return children
+            finite_automaton_graph(self.F, self.q_o, self.delta,'AFN')
 
     # This function allow us to get an AFN from a postfix expression
     def transform_postfix_to_afn(self):
@@ -103,24 +81,24 @@ class AFN(object):
 
                 # Transitions
                 # The end of your child is connected to the beginning of your child
-                self.movement_record.append(AFN_tran("E",self.binary_tree[self.child_node(node, self.binary_tree)[0]].after, self.binary_tree[self.child_node(node, self.binary_tree)[0]].former))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[child_node(node, self.binary_tree)[0]].after, self.binary_tree[child_node(node, self.binary_tree)[0]].former))
 
                 # Kleene's start connects to his son's start
-                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[self.child_node(node, self.binary_tree)[0]].former))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[child_node(node, self.binary_tree)[0]].former))
 
                 # The end of his son connects to the end of Kleene
-                self.movement_record.append(AFN_tran("E",self.binary_tree[self.child_node(node, self.binary_tree)[0]].after,self.binary_tree[node].after))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[child_node(node, self.binary_tree)[0]].after,self.binary_tree[node].after))
 
                 # The start of Klene connects to the end of Kleene
                 self.movement_record.append(AFN_tran("E",self.binary_tree[node].former,self.binary_tree[node].after))
 
                 # The sons are already analyzed
-                self.binary_tree[self.child_node(node, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(node, self.binary_tree)[0]].analyzed = True
 
             elif self.binary_tree[node].value == '.':
 
                 # To simulate the merge of a state we need to erase a state and the reconect his transitions too the new states
-                self.estados_borrar.append(self.binary_tree[self.child_node(node, self.binary_tree)[1]].after)
+                self.estados_borrar.append(self.binary_tree[child_node(node, self.binary_tree)[1]].after)
 
                 # Identify the transitions to replicate
                 transition_replicate = []
@@ -130,7 +108,7 @@ class AFN(object):
 
                 # For every transition identify we reconnect to the initial state of the right child
                 for replicate in transition_replicate:
-                    self.movement_record.append(AFN_tran(replicate.dato, replicate.inicio, self.binary_tree[self.child_node(node, self.binary_tree)[0]].former))
+                    self.movement_record.append(AFN_tran(replicate.dato, replicate.inicio, self.binary_tree[child_node(node, self.binary_tree)[0]].former))
 
                 # We delete the transition of the state erased
                 delete_transition=[]
@@ -145,12 +123,12 @@ class AFN(object):
                         self.movement_record.remove(x)
 
                 # Start and end of node
-                self.binary_tree[node].former = self.binary_tree[self.child_node(node, self.binary_tree)[1]].former
-                self.binary_tree[node].after = self.binary_tree[self.child_node(node, self.binary_tree)[0]].after
+                self.binary_tree[node].former = self.binary_tree[child_node(node, self.binary_tree)[1]].former
+                self.binary_tree[node].after = self.binary_tree[child_node(node, self.binary_tree)[0]].after
 
                 # The childs are already analyzed
-                self.binary_tree[self.child_node(node, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(node, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(node, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(node, self.binary_tree)[0]].analyzed = True
 
             elif self.binary_tree[node].value == '|':
 
@@ -162,16 +140,16 @@ class AFN(object):
 
                 # Register transitions
                 # The beginning of or connects to the beginnings of its children
-                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[self.child_node(node, self.binary_tree)[1]].former))
-                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[self.child_node(node, self.binary_tree)[0]].former))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[child_node(node, self.binary_tree)[1]].former))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[child_node(node, self.binary_tree)[0]].former))
 
                 # The endings of its children connect to the ending of or
-                self.movement_record.append(AFN_tran("E",self.binary_tree[self.child_node(node, self.binary_tree)[1]].after,self.binary_tree[node].after))
-                self.movement_record.append(AFN_tran("E",self.binary_tree[self.child_node(node, self.binary_tree)[0]].after,self.binary_tree[node].after))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[child_node(node, self.binary_tree)[1]].after,self.binary_tree[node].after))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[child_node(node, self.binary_tree)[0]].after,self.binary_tree[node].after))
 
                 # Mark that it was already visited
-                self.binary_tree[self.child_node(node, self.binary_tree)[1]].analyzed = True
-                self.binary_tree[self.child_node(node, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(node, self.binary_tree)[1]].analyzed = True
+                self.binary_tree[child_node(node, self.binary_tree)[0]].analyzed = True
 
             elif self.binary_tree[node].value == '+':
 
@@ -185,16 +163,16 @@ class AFN(object):
 
                 # Transitions
                 # The end of your child is connected to the beginning of your child
-                self.movement_record.append(AFN_tran("E",self.binary_tree[self.child_node(node, self.binary_tree)[0]].after, self.binary_tree[self.child_node(node, self.binary_tree)[0]].former))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[child_node(node, self.binary_tree)[0]].after, self.binary_tree[child_node(node, self.binary_tree)[0]].former))
 
                 # Plus start connects to his son's start
-                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[self.child_node(node, self.binary_tree)[0]].former))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[node].former, self.binary_tree[child_node(node, self.binary_tree)[0]].former))
 
                 # The end of his son connects to the end of Pluss
-                self.movement_record.append(AFN_tran("E",self.binary_tree[self.child_node(node, self.binary_tree)[0]].after,self.binary_tree[node].after))
+                self.movement_record.append(AFN_tran("E",self.binary_tree[child_node(node, self.binary_tree)[0]].after,self.binary_tree[node].after))
 
                 #The child is already analyzed
-                self.binary_tree[self.child_node(node, self.binary_tree)[0]].analyzed = True
+                self.binary_tree[child_node(node, self.binary_tree)[0]].analyzed = True
 
         # We finally eliminate from que the states identified in a concatenation
         for elemento in self.estados_borrar:
@@ -237,76 +215,27 @@ class AFN(object):
         for clave, valor in self.delta.items():
             for clave2, valor2 in valor.items():
                 valor[clave2] = list(set(valor2))
+
         self.sigma.remove('E')
 
         """AFN FINAL RESULTS"""
 
-        print(f'{"─"*117}')
-        print(f'\n{"─"*50}AFN final results{"─"*50}\n')
-        print(f'{"─"*117}\n')
+        banner(' AFN final results ')
+
+
+        """ Fancy prints with tabulate"""
+
+        finite_automaton_results(self.que, self.sigma, self.F, self.q_o, self.delta)
 
         """ Final prints without tabulate"""
 
-        # print(f'\nEstados ->{self.que}')
-        # print(f'Transiciones ->\n')
+        # finite_automaton_results(self.que, self.sigma, self.F, self.q_o, self.delta,False)
 
-        # for x in self.delta:
-        #     print(x, "", self.delta[x])
 
-        # print(f'\nSimbolos -> {self.sigma}')
-        # print(f'Estados de aceptacion -> {self.F}')
-        # print(f'Estado inicial-> {self.q_o}\n')
+""" AFN_node is a class that allow us to have a
+summary of the properties of each characther
+in the postfix expression"""
 
-        """ Fancy prints with tabulate"""
-        AFN_proporties = [
-            ["Estados", self.que],
-            ["Simbolos", self.sigma],
-            ["Estados de aceptacion", self.F],
-            ["Estado inicial", self.q_o],
-        ]
-
-        print(tabulate(AFN_proporties, tablefmt="fancy_grid", numalign="center", stralign="left"),'\n')
-
-        AFN_delta = []
-        for key, value in self.delta.items():
-            subtable = []
-            for subkey, subvalue in value.items():
-                subtable.append([subkey, subvalue])
-            AFN_delta.append([key, tabulate(subtable, tablefmt="plain", numalign="center", stralign="left")])
-
-        print(tabulate(AFN_delta, headers=['Estado             ', 'Transicion'], tablefmt="fancy_grid", numalign="center", stralign="left"),'\n')
-
-    #This allow us to make a graph from the AFN that we previously made
-    def AFN_graph(self):
-        # AFN graph
-        f= graphviz.Digraph(name="AFN")
-        f.attr(rankdir='LR')
-
-        # Node creation in graphfiz
-        for x in self.delta:
-            if x == self.F[0]:
-                f.node(str(x), shape = "doublecircle", style = 'filled', fillcolor = 'lightblue')
-            elif x == self.q_o:
-                f.node(str(x), shape = "circle", style = 'filled', fillcolor = 'lightgreen')
-            else:
-                f.node(str(x), shape = "circle")
-
-        # For transition in delta we connet two nodes (edge)
-        for x in self.delta:
-            for y in self.delta[x]:
-                    if len(self.delta[x][y]) != 0:
-                        for w in self.delta[x][y]:
-                            f.edge(x,w, label = y, arrowhead='vee')
-
-        # start identification adn name
-        f.node("", height = "0",width = "0", shape = "box")
-        f.edge("",self.q_o, arrowhead='vee', )
-        f.render("./src/GraphedFiniteAutomata/AFN", format="png", view="True")
-        # f.render("./src/GraphedFiniteAutomata/AFN", format="png")
-
-# AFN_node is a class that allow us to have a
-# summary of the properties of each characther
-# in the postfix expression
 class AFN_node:
     def __init__(self, value, former, after):
 
