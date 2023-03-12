@@ -3,8 +3,12 @@ Autor: Gabriel Vicente (20498)
 Proyecto: Laboratorio B
 
 Descripción:
-Laboratorio A para la clase Diseño de Lenguajes
+Laboratorio B para la clase Diseño de Lenguajes
 Generar AFN a partir de una expresión regular
+Generar AFD a partir de una expresión regular
+Generar AFD a partir de AFN
+Minimización de AFD
+Simulación de AFN y AFD
 
 Tomando en cuenta operaciones y abreviaturas
 [* , + , . , ? , |]
