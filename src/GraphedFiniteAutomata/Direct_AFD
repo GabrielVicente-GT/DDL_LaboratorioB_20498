@@ -11,9 +11,9 @@ digraph Direct_AFD {
 	B -> C [label=a arrowhead=vee]
 	C -> D [label=b arrowhead=vee]
 	C -> C [label=a arrowhead=vee]
-	D -> E [label=c arrowhead=vee]
 	D -> B [label=b arrowhead=vee]
 	D -> C [label=a arrowhead=vee]
+	D -> E [label=c arrowhead=vee]
 	"" [height=0 shape=box width=0]
 	"" -> A [arrowhead=vee]
 }

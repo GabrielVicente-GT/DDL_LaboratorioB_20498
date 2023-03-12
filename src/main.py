@@ -1,6 +1,6 @@
 """
 Autor: Gabriel Vicente (20498)
-Proyecto: Laboratorio A
+Proyecto: Laboratorio B
 
 Descripción:
 Laboratorio A para la clase Diseño de Lenguajes
