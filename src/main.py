@@ -21,6 +21,7 @@ from Tools.InfixToPostfix import *
 from Tools.utils import *
 from FiniteAutomata.AFN import *
 from FiniteAutomata.AFD import *
+from FiniteAutomata.AFD_minimization import *
 
 #REGEX EXAMPLES
 """
@@ -52,5 +53,7 @@ NFA  = AFN(InfixToPostfix(regex).postfix)
 DFA_from_NFA = AFD_from_AFN(NFA)
 
 # Direct AFD
-DFA    = Direct_AFD(InfixToPostfix(regex).postfix)
+# DFA    = Direct_AFD(InfixToPostfix(regex).postfix)
 
+# MInimization AFD form AFN
+DFA_minized = AFD_min(DFA_from_NFA)

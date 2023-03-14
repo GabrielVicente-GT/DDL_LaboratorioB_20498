@@ -10,9 +10,10 @@ from Tools.utils import *
 
 class AFD_from_AFN(object):
     def __init__(self, AFN):
-        self.AFN        = AFN
         self.unmarked   = []
         self.asignacion = {}
+        self.AFN        = AFN
+        self.postfix    = self.AFN.postfix
         '''AFD consist of:'''
         #The values of these variables will change
 
